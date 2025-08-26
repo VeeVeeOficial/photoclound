@@ -1,19 +1,21 @@
 // ==============================================
-// src/app/page.tsx (หน้าแรก)
+// src/app/page.tsx - with Upload Feature
 // ==============================================
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import AlbumGrid from '@/components/AlbumGrid'; // ใช้ AlbumGrid
+import AlbumGrid from '@/components/AlbumGrid';
 import { Album } from '@/types';
 import { getAllAlbums } from '@/lib/firestore';
+import { Upload, Plus } from 'lucide-react';
 
 export default function HomePage() {
   const router = useRouter();
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     loadAlbums();
@@ -23,7 +25,6 @@ export default function HomePage() {
     try {
       setError(null);
       const albumsData = await getAllAlbums();
-      // ป้องกัน undefined และ filter ข้อมูลเสีย
       const validAlbums = (albumsData || []).filter(album => 
         album && typeof album === 'object' && album.name && album.id
       );
@@ -31,7 +32,7 @@ export default function HomePage() {
     } catch (error) {
       console.error('Error loading albums:', error);
       setError('Failed to load albums');
-      setAlbums([]); // ตั้งค่า fallback
+      setAlbums([]);
     } finally {
       setLoading(false);
     }
@@ -41,18 +42,26 @@ export default function HomePage() {
     router.push(`/album/${album.id}`);
   };
 
-  const handleAlbumDelete = async (albumId: string) => {
-    if (!confirm('Are you sure you want to delete this album?')) return;
-    
+  const handleAlbumDelete = async () => {
+    alert('Delete function not implemented yet');
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
     try {
-      // TODO: Implement delete function when firestore deleteAlbum is available
-      alert('Delete function not implemented yet');
+      // TODO: Implement actual upload logic
+      alert(`Selected ${files.length} files. Upload functionality needs to be implemented.`);
       
-      // For now, just remove from UI (won't persist)
-      // setAlbums(prev => prev.filter(album => album.id !== albumId));
+      // Reset input
+      e.target.value = '';
     } catch (error) {
-      console.error('Error deleting album:', error);
-      alert('Failed to delete album');
+      console.error('Upload error:', error);
+      alert('Failed to upload photos');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -86,6 +95,64 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
       <div className="container mx-auto px-4">
+        {/* Header with Upload */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">PhotoShare</h1>
+              <p className="text-gray-600">Share your photos easily and securely</p>
+            </div>
+            
+            {/* Upload Button */}
+            <div className="flex items-center gap-4">
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+                id="photo-upload"
+                disabled={uploading}
+              />
+              <label htmlFor="photo-upload">
+                <div className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors cursor-pointer flex items-center gap-2 shadow-lg">
+                  {uploading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={20} />
+                      Upload Photos
+                    </>
+                  )}
+                </div>
+              </label>
+            </div>
+          </div>
+
+          {/* Upload Zone */}
+          {albums.length === 0 && (
+            <div className="bg-white rounded-2xl shadow-lg p-8 mb-6">
+              <div className="text-center">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 hover:border-blue-400 transition-colors">
+                  <Upload size={48} className="mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-xl font-medium text-gray-600 mb-2">Get Started</h3>
+                  <p className="text-gray-500 mb-4">Upload your first photos to create an album</p>
+                  <label htmlFor="photo-upload">
+                    <div className="inline-flex items-center gap-2 bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors cursor-pointer">
+                      <Plus size={16} />
+                      Choose Photos
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Albums Grid */}
         <AlbumGrid 
           albums={albums}
           onAlbumSelect={handleAlbumSelect}
