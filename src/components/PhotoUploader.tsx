@@ -10,8 +10,9 @@ interface PhotoUploaderProps {
 }
 
 // Apps Script Configuration
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const APPS_SCRIPT_URL =
-  'https://script.google.com/macros/s/AKfycbw35O0W7PsgNu_Hh2jHsB87dVvS5tjxWXqUWa6ygOMze6ylLtYOZ80jweCAURvDN6T7/exec';
+  'https://script.google.com/macros/s/AKfycbzbUwa134-yZMcNzxpLetPGyUcibPvw9ZkY_BrQi8u_wWvK-M7sqqkKOhHmY2Ef31Jr/exec';
 
 // Batch upload types
 type UploadResult = {
@@ -101,7 +102,7 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({ onAlbumCreated }) => {
       timestamp: new Date().toISOString(),
     };
 
-    const response = await fetch(APPS_SCRIPT_URL, {
+    const response = await fetch('/api/upload', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
