@@ -1,105 +1,72 @@
+// src/lib/firestore.ts
 // ==============================================
-// 4. src/lib/firestore.ts
+// ใช้ Apps Script แทน Firestore
 // ==============================================
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
-  doc,
-  getDoc,
-  query, 
-  where, 
-  orderBy, 
-  Timestamp,
-  updateDoc,
-  increment,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  deleteDoc
-} from 'firebase/firestore';
-import { db } from './firebase';
-import { Photo, Album } from '@/types';
 
+const APPS_SCRIPT_URL =
+  'https://script.google.com/macros/s/AKfycbzbUwa134-yZMcNzxpLetPGyUcibPvw9ZkY_BrQi8u_wWvK-M7sqqkKOhHmY2Ef31Jr/exec';
+
+import { Album, Photo } from '@/types';
+
+// === สร้างอัลบั้ม ===
 export const createAlbum = async (name: string): Promise<string> => {
-  const albumData = {
+  const payload = {
+    action: 'create_album',
     name,
-    createdAt: Timestamp.fromDate(new Date()),
-    views: 0
+    createdAt: new Date().toISOString(),
   };
-  
-  const docRef = await addDoc(collection(db, 'albums'), albumData);
-  
-  // Update with share link
-  const shareLink = `${window.location.origin}/album/${docRef.id}`;
-  await updateDoc(doc(db, 'albums', docRef.id), { shareLink });
-  
-  return docRef.id;
+
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await res.json();
+  if (!data.success) throw new Error(data.error || 'Failed to create album');
+  return data.albumId; // Apps Script คืน id อัลบั้ม
 };
 
+// === บันทึก metadata ของรูป ===
 export const savePhoto = async (photoData: Omit<Photo, 'id'>): Promise<string> => {
-  const docRef = await addDoc(collection(db, 'photos'), {
+  const payload = {
+    action: 'save_photo',
     ...photoData,
-    uploadTime: Timestamp.fromDate(photoData.uploadTime),
-    deleteAt: Timestamp.fromDate(photoData.deleteAt)
+    uploadTime: photoData.uploadTime.toISOString(),
+    deleteAt: photoData.deleteAt.toISOString(),
+  };
+
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
   });
-  
-  return docRef.id;
+
+  const data = await res.json();
+  if (!data.success) throw new Error(data.error || 'Failed to save photo');
+  return data.photoId; // Apps Script คืน id ของรูป
 };
 
+// === อ่านรูปจากอัลบั้ม ===
 export const getAlbumPhotos = async (albumId: string): Promise<Photo[]> => {
-  const q = query(
-    collection(db, 'photos'),
-    where('albumId', '==', albumId),
-    orderBy('uploadTime', 'desc')
-  );
-  
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data(),
-    uploadTime: doc.data().uploadTime.toDate(),
-    deleteAt: doc.data().deleteAt.toDate()
-  })) as Photo[];
+  const res = await fetch(`${APPS_SCRIPT_URL}?action=get_photos&albumId=${albumId}`);
+  const data = await res.json();
+  if (!data.success) throw new Error(data.error || 'Failed to load photos');
+  return data.photos;
 };
 
+// === อ่านข้อมูลอัลบั้มเดียว ===
 export const getAlbum = async (albumId: string): Promise<Album | null> => {
-  const albumDoc = await getDoc(doc(db, 'albums', albumId));
-  
-  if (!albumDoc.exists()) return null;
-  
-  const albumData = albumDoc.data();
-  const photos = await getAlbumPhotos(albumId);
-  
-  return {
-    id: albumDoc.id,
-    ...albumData,
-    photos,
-    createdAt: albumData.createdAt.toDate()
-  } as Album;
+  const res = await fetch(`${APPS_SCRIPT_URL}?action=get_album&albumId=${albumId}`);
+  const data = await res.json();
+  if (!data.success) return null;
+  return data.album as Album;
 };
 
-export const incrementAlbumViews = async (albumId: string): Promise<void> => {
-  await updateDoc(doc(db, 'albums', albumId), {
-    views: increment(1)
-  });
-};
-
+// === อ่านอัลบั้มทั้งหมด ===
 export const getAllAlbums = async (): Promise<Album[]> => {
-  const q = query(collection(db, 'albums'), orderBy('createdAt', 'desc'));
-  const snapshot = await getDocs(q);
-  
-  const albums = await Promise.all(
-    snapshot.docs.map(async (albumDoc) => {
-      const albumData = albumDoc.data();
-      const photos = await getAlbumPhotos(albumDoc.id);
-      
-      return {
-        id: albumDoc.id,
-        ...albumData,
-        photos,
-        createdAt: albumData.createdAt.toDate()
-      } as Album;
-    })
-  );
-  
-  return albums;
+  const res = await fetch(`${APPS_SCRIPT_URL}?action=get_albums`);
+  const data = await res.json();
+  if (!data.success) throw new Error(data.error || 'Failed to load albums');
+  return data.albums as Album[];
 };
