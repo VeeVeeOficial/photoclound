@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AlbumGrid from '@/components/AlbumGrid'; // ใช้ AlbumGrid
 import { Album } from '@/types';
-import { getAllAlbums, deleteAlbum } from '@/lib/firestore';
+import { getAllAlbums } from '@/lib/firestore';
 
 export default function HomePage() {
   const router = useRouter();
@@ -45,8 +45,11 @@ export default function HomePage() {
     if (!confirm('Are you sure you want to delete this album?')) return;
     
     try {
-      await deleteAlbum(albumId);
-      setAlbums(prev => prev.filter(album => album.id !== albumId));
+      // TODO: Implement delete function when firestore deleteAlbum is available
+      alert('Delete function not implemented yet');
+      
+      // For now, just remove from UI (won't persist)
+      // setAlbums(prev => prev.filter(album => album.id !== albumId));
     } catch (error) {
       console.error('Error deleting album:', error);
       alert('Failed to delete album');
