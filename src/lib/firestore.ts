@@ -1,81 +1,76 @@
-// src/lib/firestore.ts
-// ==============================================
-// ใช้ Apps Script แทน Firestore
-// ==============================================
-
-const APPS_SCRIPT_URL =
-  'https://script.google.com/macros/s/AKfycbw35O0W7PsgNu_Hh2jHsB87dVvS5tjxWXqUWa6ygOMze6ylLtYOZ80jweCAURvDN6T7/exec';
-  
-
+// lib/firestore.ts - Mock functions
 import { Album, Photo } from '@/types';
 
-// === สร้างอัลบั้ม ===
-export const createAlbum = async (name: string): Promise<string> => {
-  const payload = {
-    action: 'create_album',
-    name,
-    createdAt: new Date().toISOString(),
+// Mock storage - using const for arrays (ESLint preferred)
+const mockAlbums: Album[] = [];
+const mockPhotos: Photo[] = [];
+
+export async function createAlbum(name: string): Promise<string> {
+  const albumId = Math.random().toString(36).substring(2, 15);
+  
+  const newAlbum: Album = {
+    id: albumId,
+    name: name,
+    photos: [],
+    shareLink: typeof window !== 'undefined' 
+      ? `${window.location.origin}/album/${albumId}` 
+      : `https://your-domain.vercel.app/album/${albumId}`,
+    createdAt: new Date(),
+    views: 0
   };
+  
+  mockAlbums.unshift(newAlbum);
+  console.log('Album created:', albumId, name);
+  return albumId;
+}
 
-  const res = await fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-
-  const data = await res.json();
-  if (!data.success) throw new Error(data.error || 'Failed to create album');
-  return data.albumId; // Apps Script คืน id อัลบั้ม
-};
-
-// === บันทึก metadata ของรูป ===
-export const savePhoto = async (photoData: Omit<Photo, 'id'>): Promise<string> => {
-  const payload = {
-    action: 'save_photo',
-    ...photoData,
-    uploadTime: photoData.uploadTime.toISOString(),
-    deleteAt: photoData.deleteAt.toISOString(),
+export async function savePhoto(photoData: Omit<Photo, 'id'>): Promise<string> {
+  const photoId = Math.random().toString(36).substring(2, 15);
+  
+  const photo: Photo = {
+    id: photoId,
+    fileName: photoData.fileName,
+    downloadURL: photoData.downloadURL,
+    filePath: photoData.filePath,
+    albumId: photoData.albumId,
+    uploadTime: photoData.uploadTime,
+    deleteAt: photoData.deleteAt,
+    fileSize: photoData.fileSize
   };
+  
+  mockPhotos.push(photo);
+  
+  // อัปเดต album ให้มี photo นี้
+  const albumIndex = mockAlbums.findIndex(a => a.id === photoData.albumId);
+  if (albumIndex !== -1) {
+    mockAlbums[albumIndex].photos.push(photo);
+  }
+  
+  console.log('Photo saved:', photoId, photoData.fileName);
+  return photoId;
+}
 
-  const res = await fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
+export async function getAllAlbums(): Promise<Album[]> {
+  console.log('Getting all albums, found:', mockAlbums.length);
+  return [...mockAlbums];
+}
 
-  const data = await res.json();
-  if (!data.success) throw new Error(data.error || 'Failed to save photo');
-  return data.photoId; // Apps Script คืน id ของรูป
-};
+export async function getAlbum(albumId: string): Promise<Album | null> {
+  const album = mockAlbums.find(a => a.id === albumId);
+  console.log('Getting album:', albumId, album ? 'found' : 'not found');
+  return album || null;
+}
 
-// === อ่านรูปจากอัลบั้ม ===
-export const getAlbumPhotos = async (albumId: string): Promise<Photo[]> => {
-  const res = await fetch(`${APPS_SCRIPT_URL}?action=get_photos&albumId=${albumId}`);
-  const data = await res.json();
-  if (!data.success) throw new Error(data.error || 'Failed to load photos');
-  return data.photos;
-};
+export async function getAlbumPhotos(albumId: string): Promise<Photo[]> {
+  const photos = mockPhotos.filter(p => p.albumId === albumId);
+  console.log('Getting photos for album:', albumId, 'found:', photos.length);
+  return photos;
+}
 
-// === อ่านข้อมูลอัลบั้มเดียว ===
-export const getAlbum = async (albumId: string): Promise<Album | null> => {
-  const res = await fetch(`${APPS_SCRIPT_URL}?action=get_album&albumId=${albumId}`);
-  const data = await res.json();
-  if (!data.success) return null;
-  return data.album as Album;
-};
-
-// === อ่านอัลบั้มทั้งหมด ===
-export const getAllAlbums = async (): Promise<Album[]> => {
-  const res = await fetch(`${APPS_SCRIPT_URL}?action=get_albums`);
-  const data = await res.json();
-  if (!data.success) throw new Error(data.error || 'Failed to load albums');
-  return data.albums as Album[];
-};
-// เพิ่ม views ของ album
-export const incrementAlbumViews = async (albumId: string): Promise<void> => {
-  console.log(`Mock increment views for album ${albumId}`);
-  // ถ้าใช้ Firestore จริง:
-  // await updateDoc(doc(db, 'albums', albumId), {
-  //   views: increment(1)
-  // });
-};
+export async function incrementAlbumViews(albumId: string): Promise<void> {
+  const albumIndex = mockAlbums.findIndex(a => a.id === albumId);
+  if (albumIndex !== -1) {
+    mockAlbums[albumIndex].views += 1;
+    console.log('Incremented views for album:', albumId);
+  }
+}
