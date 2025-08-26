@@ -4,8 +4,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Eye, Camera, Calendar, Share2, Trash2, Copy, Check } from 'lucide-react';
+import { Eye, Camera, Calendar, Trash2, Copy, Check } from 'lucide-react';
 import { Album } from '@/types';
+import Image from 'next/image';
 
 interface AlbumGridProps {
   albums: Album[];
@@ -59,10 +60,12 @@ const AlbumGrid: React.FC<AlbumGridProps> = ({ albums, onAlbumSelect, onAlbumDel
                   <div key={photo.id} className={`relative ${
                     album.photos.length === 1 ? 'col-span-2' : ''
                   } ${album.photos.length === 2 && index === 0 ? 'col-span-2' : ''}`}>
-                    <img
+                    <Image
                       src={photo.downloadURL}
                       alt={photo.fileName}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                   </div>
                 ))}
