@@ -12,11 +12,6 @@ import Link from 'next/link';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 
 
-interface AlbumViewerProps {
-  album: Album;
-  onBack: () => void;
-}
-
 export default function AlbumPage() {
   const params = useParams();
   const router = useRouter();
