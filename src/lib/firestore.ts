@@ -70,3 +70,11 @@ export const getAllAlbums = async (): Promise<Album[]> => {
   if (!data.success) throw new Error(data.error || 'Failed to load albums');
   return data.albums as Album[];
 };
+// เพิ่ม views ของ album
+export const incrementAlbumViews = async (albumId: string): Promise<void> => {
+  console.log(`Mock increment views for album ${albumId}`);
+  // ถ้าใช้ Firestore จริง:
+  // await updateDoc(doc(db, 'albums', albumId), {
+  //   views: increment(1)
+  // });
+};
