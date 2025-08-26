@@ -6,7 +6,7 @@ import PhotoUploader from '@/components/PhotoUploader';
 import AlbumGrid from '@/components/AlbumGrid';
 import { Album } from '@/types';
 import { getAllAlbums } from '@/lib/firestore';
-import { Upload, Gallery, Camera, Share2, Clock } from 'lucide-react';
+import { Upload, Images, Camera, Share2, Clock } from 'lucide-react';
 
 export default function HomePage() {
   const router = useRouter();
@@ -138,7 +138,7 @@ export default function HomePage() {
           <div className="text-center py-16 animate-in fade-in-50 duration-500">
             <div className="bg-white rounded-3xl p-12 shadow-xl max-w-2xl mx-auto">
               <div className="bg-gradient-to-r from-blue-100 to-purple-100 w-20 h-20 rounded-2xl mx-auto mb-6 flex items-center justify-center">
-                <Gallery className="w-10 h-10 text-blue-600" />
+                <Images className="w-10 h-10 text-blue-600" />
               </div>
               <h2 className="text-3xl font-bold text-gray-800 mb-4">Welcome to PhotoShare</h2>
               <p className="text-gray-600 mb-8 text-lg leading-relaxed">
