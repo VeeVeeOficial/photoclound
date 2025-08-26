@@ -2,9 +2,9 @@
 import { NextResponse } from 'next/server';
 
 const APPS_SCRIPT_URL =
-  'https://script.google.com/macros/s/AKfycbw35O0W7PsgNu_Hh2jHsB87dVvS5tjxWXqUWa6ygOMze6ylLtYOZ80jweCAURvDN6T7/exec';
+  'https://script.google.com/macros/s/AKfycbw35O0W7PsgNu_Hh2jHsB87dVS5tJxkqUMa6y0MZe6y1LtYOZ80jweCAURvDN6T7/exec';
 
-// Handle POST
+// ✅ Handle POST
 export async function POST(req: Request) {
   try {
     const payload = await req.json();
@@ -25,15 +25,16 @@ export async function POST(req: Request) {
       },
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Proxy failed';
+    const errorMessage =
+      err instanceof Error ? err.message : 'Proxy failed';
     return NextResponse.json(
-      { success: false, error: message },
+      { success: false, error: errorMessage },
       { status: 500 }
     );
   }
 }
 
-// Handle OPTIONS (CORS preflight)
+// ✅ Handle OPTIONS (CORS preflight)
 export async function OPTIONS() {
   return NextResponse.json(
     { success: true },
