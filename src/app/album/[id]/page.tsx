@@ -11,6 +11,12 @@ import { getAlbum, incrementAlbumViews } from '@/lib/firestore';
 import Link from 'next/link';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 
+
+interface AlbumViewerProps {
+  album: Album;
+  onBack: () => void;
+}
+
 export default function AlbumPage() {
   const params = useParams();
   const router = useRouter();
@@ -29,7 +35,7 @@ export default function AlbumPage() {
 
   const loadAlbum = async (albumId: string) => {
     try {
-      setError(null); // Clear any previous errors
+      setError(null);
       const albumData = await getAlbum(albumId);
       
       if (!albumData) {
@@ -39,7 +45,7 @@ export default function AlbumPage() {
 
       setAlbum(albumData);
       
-      // Increment view count (don't block on this)
+      // Increment view count
       incrementAlbumViews(albumId).catch(err => 
         console.warn('Failed to increment views:', err)
       );
@@ -57,7 +63,6 @@ export default function AlbumPage() {
   };
 
   const handleBack = () => {
-    // Try to go back in history, fallback to home if no history
     if (window.history.length > 1) {
       router.back();
     } else {
@@ -114,7 +119,7 @@ export default function AlbumPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
       <div className="container mx-auto px-4">
         <AlbumViewer 
-          album={album} 
+          album={album as Album} 
           onBack={handleBack}
         />
       </div>
